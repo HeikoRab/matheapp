@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brookhaven Mathe Abenteuer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header mit Stats */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+
+        /* Hauptbereich */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Willkommens-Screen */
+        .welcome-screen {
+            text-align: center;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .character {
+            font-size: 80px;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffd700;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,210,211,0.4);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Spiel-Screen */
+        .game-screen {
+            text-align: center;
+            width: 100%;
+        }
+
+        .night-badge {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            padding: 10px 30px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .story-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .character-speaking {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .character-avatar {
+            font-size: 50px;
+            flex-shrink: 0;
+        }
+
+        .speech-bubble {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .math-problem {
+            background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-size: 2em;
+            font-weight: bold;
+            border: 3px solid #ffd700;
+        }
+
+        .answer-input {
+            width: 120px;
+            padding: 15px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(255,215,0,0.5);
+        }
+
+        /* Feedback */
+        .feedback {
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .feedback.correct {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+        }
+
+        .feedback.wrong {
+            background: linear-gradient(45deg, #e17055, #fdcb6e);
+        }
+
+        .reward {
+            font-size: 1.5em;
+            margin-top: 10px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        /* Belohnungs-Screen */
+        .reward-screen {
+            text-align: center;
+        }
+
+        .big-reward {
+            font-size: 100px;
+            animation: spin 1s ease;
+        }
+
+        @keyframes spin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* Hilfe-Button */
+        .help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #e17055;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .hint-box {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Pet Auswahl */
+        .pet-selection {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .pet-option {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .pet-option:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+
+        .pet-option.selected {
+            border-color: #ffd700;
+            background: rgba(255,215,0,0.2);
+        }
+
+        .pet-option .emoji {
+            font-size: 40px;
+        }
+
+        .pet-option .name {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Streak Anzeige */
+        .streak {
+            color: #ff6b6b;
+            font-size: 0.9em;
+        }
+
+        .streak.active {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header mit Stats (versteckt am Anfang) -->
+        <div class="header hidden" id="header">
+            <div class="stat">
+                <div class="stat-value" id="coins">0</div>
+                <div class="stat-label">Bloxy Coins</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="night">1</div>
+                <div class="stat-label">Nacht</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Serie</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Willkommens-Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="character">🏠</div>
+                <h1 class="game-title">Brookhaven</h1>
+                <h2 class="game-title">Mathe Abenteuer</h2>
+                <p class="subtitle">Überlebe 99 Nächte und verdiene dein Traum-Pet!</p>
+
+                <div class="input-group">
+                    <label>Wie heißt du?</label>
+                    <input type="text" id="playerName" placeholder="Dein Name...">
+                </div>
+
+                <button class="btn" onclick="showPetSelection()">Los geht's!</button>
+            </div>
+
+            <!-- Pet Auswahl Screen -->
+            <div class="welcome-screen hidden" id="petScreen">
+                <h2>Wähle dein Ziel-Pet!</h2>
+                <p class="subtitle">Welches Pet möchtest du freischalten?</p>
+
+                <div class="pet-selection" id="petSelection">
+                    <div class="pet-option" data-pet="unicorn" data-name="Einhorn">
+                        <div class="emoji">🦄</div>
+                        <div class="name">Einhorn</div>
+                    </div>
+                    <div class="pet-option" data-pet="dragon" data-name="Drache">
+                        <div class="emoji">🐉</div>
+                        <div class="name">Drache</div>
+                    </div>
+                    <div class="pet-option" data-pet="cat" data-name="Katze">
+                        <div class="emoji">🐱</div>
+                        <div class="name">Katze</div>
+                    </div>
+                    <div class="pet-option" data-pet="dog" data-name="Hund">
+                        <div class="emoji">🐕</div>
+                        <div class="name">Hund</div>
+                    </div>
+                    <div class="pet-option" data-pet="phoenix" data-name="Phönix">
+                        <div class="emoji">🔥</div>
+                        <div class="name">Phönix</div>
+                    </div>
+                    <div class="pet-option" data-pet="panda" data-name="Panda">
+                        <div class="emoji">🐼</div>
+                        <div class="name">Panda</div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="startGame()">Abenteuer starten!</button>
+            </div>
+
+            <!-- Spiel-Screen -->
+            <div class="game-screen hidden" id="gameScreen">
+                <div class="night-badge">🌙 Nacht <span id="currentNight">1</span> von 99</div>
+
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar" style="width: 1%"></div>
+                </div>
+                <div class="progress-text">Fortschritt zum <span id="targetPetName">Einhorn</span>: <span id="progressPercent">1</span>%</div>
+
+                <div class="story-box">
+                    <div class="character-speaking">
+                        <div class="character-avatar" id="npcAvatar">👨‍🔬</div>
+                        <div class="speech-bubble" id="storyText">
+                            Willkommen in Brookhaven! Ich bin Professor Pixel. Um heute Nacht zu überleben, musst du diesen Code knacken!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="math-problem" id="mathProblem">
+                    5 + 3 = ?
+                </div>
+
+                <div class="hint-box hidden" id="hintBox">
+                    <strong>💡 Tipp:</strong> <span id="hintText"></span>
+                </div>
+
+                <input type="number" class="answer-input" id="answerInput" placeholder="?" onkeypress="checkEnter(event)">
+
+                <div>
+                    <button class="btn" onclick="checkAnswer()">Prüfen!</button>
+                </div>
+
+                <div class="feedback hidden" id="feedback">
+                    <div id="feedbackText"></div>
+                    <div class="reward" id="rewardText"></div>
+                </div>
+            </div>
+
+            <!-- Erfolgs-Screen -->
+            <div class="reward-screen hidden" id="rewardScreen">
+                <div class="big-reward" id="bigRewardEmoji">🦄</div>
+                <h1 class="game-title">Geschafft!</h1>
+                <p id="rewardMessage">Du hast dein Einhorn verdient!</p>
+                <button class="btn" onclick="resetGame()">Nochmal spielen</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="help-btn hidden" id="helpBtn" onclick="showHint()">💡</button>
+
+    <script>
+        // Spielzustand
+        let gameState = {
+            playerName: '',
+            targetPet: 'unicorn',
+            targetPetName: 'Einhorn',
+            targetPetEmoji: '🦄',
+            currentNight: 1,
+            coins: 0,
+            streak: 0,
+            currentProblem: null,
+            hintsUsed: 0
+        };
+
+        // Roblox-Charaktere für die Geschichte
+        const characters = [
+            { name: 'Professor Pixel', emoji: '👨‍🔬', style: 'freundlich' },
+            { name: 'Noob', emoji: '😊', style: 'lustig' },
+            { name: 'Builderman', emoji: '👷', style: 'ermutigend' },
+            { name: 'Bacon Hair', emoji: '🧑‍🦰', style: 'freundlich' },
+            { name: 'Guest', emoji: '👤', style: 'geheimnisvoll' },
+            { name: 'Korblox', emoji: '🦴', style: 'cool' },
+            { name: 'Dominus', emoji: '👑', style: 'königlich' }
+        ];
+
+        // Geschichten für verschiedene Nächte
+        const stories = [
+            "Du betrittst Brookhaven und triffst auf mich! Um das erste Tor zu öffnen, löse diese Aufgabe:",
+            "Ein mysteriöser Nebel zieht auf. Nur die richtige Zahl kann ihn vertreiben!",
+            "Du findest eine verschlossene Schatzkiste. Der Code ist eine Mathe-Aufgabe!",
+            "Ein freundlicher Noob braucht deine Hilfe! Kannst du ihm bei dieser Rechnung helfen?",
+            "Du entdeckst ein geheimes Haus. Die Tür öffnet sich nur mit der richtigen Antwort!",
+            "Oh nein! Ein Hindernis blockiert den Weg. Berechne die Lösung, um weiterzukommen!",
+            "Du triffst einen anderen Spieler. Er fordert dich zu einem Mathe-Duell heraus!",
+            "Eine magische Brücke erscheint, aber sie ist noch unvollständig. Welche Zahl fehlt?",
+            "Du findest einen Roboter, der einen Fehler hat. Repariere ihn mit Mathe!",
+            "Fast geschafft! Noch eine Aufgabe, dann bist du sicher für diese Nacht!"
+        ];
+
+        // Aufgaben nach Schwierigkeitsgrad (inspiriert von den Arbeitsblättern)
+        const problemGenerators = {
+            // Nacht 1-15: Sehr einfache Addition und Subtraktion
+            easy: [
+                () => {
+                    const a = Math.floor(Math.random() * 10) + 1;
+                    const b = Math.floor(Math.random() * 10) + 1;
+                    return { question: `${a} + ${b} = ?`, answer: a + b, hint: `Zähle ${a} und dann noch ${b} dazu!` };
+                },
+                () => {
+                    const a = Math.floor(Math.random() * 10) + 5;
+                    const b = Math.floor(Math.random() * 5) + 1;
+                    return { question: `${a} - ${b} = ?`, answer: a - b, hint: `Du hast ${a} und nimmst ${b} weg.` };
+                },
+                () => {
+                    const answer = Math.floor(Math.random() * 10) + 1;
+                    const b = Math.floor(Math.random() * 10) + 1;
+                    return { question: `? + ${b} = ${answer + b}`, answer: answer, hint: `Was plus ${b} ergibt ${answer + b}?` };
+                }
+            ],
+            // Nacht 16-35: Zahlenfolgen und einfache Multiplikation
+            medium: [
+                () => {
+                    const start = Math.floor(Math.random() * 5) * 10 + 10;
+                    const step = [5, 10][Math.floor(Math.random() * 2)];
+                    const pos = Math.floor(Math.random() * 3) + 1;
+                    let sequence = [];
+                    for (let i = 0; i < 5; i++) {
+                        sequence.push(start + i * step);
+                    }
+                    const answer = sequence[pos];
+                    sequence[pos] = '?';
+                    return { question: sequence.join(', '), answer: answer, hint: `Die Zahlen werden immer um ${step} größer!` };
+                },
+                () => {
+                    const a = Math.floor(Math.random() * 5) + 2;
+                    const b = Math.floor(Math.random() * 5) + 2;
+                    return { question: `${a} × ${b} = ?`, answer: a * b, hint: `${a} mal ${b} bedeutet: ${a} + `.repeat(b-1) + a };
+                },
+                () => {
+                    const a = Math.floor(Math.random() * 30) + 20;
+                    const b = Math.floor(Math.random() * 15) + 5;
+                    return { question: `${a} - ${b} = ?`, answer: a - b, hint: `Rechne erst ${a} - ${Math.floor(b/10)*10}, dann noch -${b % 10}` };
+                }
+            ],
+            // Nacht 36-60: Division, Verdoppeln, Halbieren
+            hard: [
+                () => {
+                    const b = [2, 3, 4, 5][Math.floor(Math.random() * 4)];
+                    const answer = Math.floor(Math.random() * 8) + 2;
+                    const a = answer * b;
+                    return { question: `${a} : ${b} = ?`, answer: answer, hint: `Wie oft passt ${b} in ${a}?` };
+                },
+                () => {
+                    const num = Math.floor(Math.random() * 30) + 10;
+                    return { question: `Das Doppelte von ${num} = ?`, answer: num * 2, hint: `Doppelt bedeutet: ${num} + ${num}` };
+                },
+                () => {
+                    const num = (Math.floor(Math.random() * 25) + 5) * 2;
+                    return { question: `Die Hälfte von ${num} = ?`, answer: num / 2, hint: `Teile ${num} in zwei gleiche Teile!` };
+                }
+            ],
+            // Nacht 61-99: Division mit Rest, komplexere Aufgaben
+            expert: [
+                () => {
+                    const divisor = [3, 4, 5, 6, 7][Math.floor(Math.random() * 5)];
+                    const quotient = Math.floor(Math.random() * 8) + 2;
+                    const remainder = Math.floor(Math.random() * (divisor - 1)) + 1;
+                    const dividend = quotient * divisor + remainder;
+                    return {
+                        question: `${dividend} : ${divisor} = ? Rest ${remainder}`,
+                        answer: quotient,
+                        hint: `${quotient} × ${divisor} = ${quotient * divisor}, und ${quotient * divisor} + ${remainder} = ${dividend}`
+                    };
+                },
+                () => {
+                    const answer = Math.floor(Math.random() * 30) + 10;
+                    const b = Math.floor(Math.random() * 20) + 10;
+                    const sum = answer + b;
+                    return { question: `${sum} - ? = ${b}`, answer: answer, hint: `Was musst du von ${sum} abziehen, um ${b} zu bekommen?` };
+                },
+                () => {
+                    const a = Math.floor(Math.random() * 8) + 3;
+                    const b = Math.floor(Math.random() * 8) + 3;
+                    return { question: `${a} × ${b} = ?`, answer: a * b, hint: `Denk an die ${a}er-Reihe!` };
+                }
+            ]
+        };
+
+        // Pet-Auswahl
+        document.querySelectorAll('.pet-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.pet-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                gameState.targetPet = option.dataset.pet;
+                gameState.targetPetName = option.dataset.name;
+                gameState.targetPetEmoji = option.querySelector('.emoji').textContent;
+            });
+        });
+
+        function showPetSelection() {
+            const name = document.getElementById('playerName').value.trim();
+            if (!name) {
+                document.getElementById('playerName').style.border = '3px solid #ff6b6b';
+                return;
+            }
+            gameState.playerName = name;
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('petScreen').classList.remove('hidden');
+        }
+
+        function startGame() {
+            if (!gameState.targetPet) {
+                alert('Bitte wähle ein Pet aus!');
+                return;
+            }
+            document.getElementById('petScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('header').classList.remove('hidden');
+            document.getElementById('helpBtn').classList.remove('hidden');
+            document.getElementById('targetPetName').textContent = gameState.targetPetName;
+
+            generateProblem();
+        }
+
+        function generateProblem() {
+            const night = gameState.currentNight;
+            let difficulty;
+
+            if (night <= 15) difficulty = 'easy';
+            else if (night <= 35) difficulty = 'medium';
+            else if (night <= 60) difficulty = 'hard';
+            else difficulty = 'expert';
+
+            const generators = problemGenerators[difficulty];
+            const generator = generators[Math.floor(Math.random() * generators.length)];
+            gameState.currentProblem = generator();
+
+            // Update UI
+            document.getElementById('currentNight').textContent = night;
+            document.getElementById('night').textContent = night;
+            document.getElementById('mathProblem').textContent = gameState.currentProblem.question;
+
+            // Zufälliger Charakter und Geschichte
+            const character = characters[Math.floor(Math.random() * characters.length)];
+            const story = stories[Math.floor(Math.random() * stories.length)];
+
+            document.getElementById('npcAvatar').textContent = character.emoji;
+            document.getElementById('storyText').innerHTML = `<strong>${character.name}:</strong> ${story}`;
+
+            // Reset
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('hintBox').classList.add('hidden');
+
+            updateProgress();
+        }
+
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                checkAnswer();
+            }
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answerInput').value);
+            const correctAnswer = gameState.currentProblem.answer;
+            const feedback = document.getElementById('feedback');
+            const feedbackText = document.getElementById('feedbackText');
+            const rewardText = document.getElementById('rewardText');
+
+            if (isNaN(userAnswer)) {
+                document.getElementById('answerInput').style.border = '3px solid #ff6b6b';
+                return;
+            }
+
+            feedback.classList.remove('hidden', 'correct', 'wrong');
+
+            if (userAnswer === correctAnswer) {
+                // Richtige Antwort
+                feedback.classList.add('correct');
+                gameState.streak++;
+                const baseCoins = 10;
+                const streakBonus = gameState.streak > 1 ? gameState.streak * 2 : 0;
+                const coinsEarned = baseCoins + streakBonus;
+                gameState.coins += coinsEarned;
+
+                const successMessages = [
+                    `Super gemacht, ${gameState.playerName}! 🎉`,
+                    `Perfekt! Du bist ein Mathe-Profi! ⭐`,
+                    `Richtig! Du rockst das! 🚀`,
+                    `Genial! Weiter so! 💪`,
+                    `Wow, das war schnell! 🌟`,
+                    `Fantastisch! ${gameState.targetPetEmoji} ist stolz auf dich!`
+                ];
+
+                feedbackText.textContent = successMessages[Math.floor(Math.random() * successMessages.length)];
+                rewardText.textContent = `+${coinsEarned} Bloxy Coins! 💰` + (gameState.streak > 1 ? ` (${gameState.streak}er Serie!)` : '');
+
+                document.getElementById('coins').textContent = gameState.coins;
+                document.getElementById('streak').textContent = gameState.streak;
+
+                // Nächste Nacht nach kurzer Pause
+                setTimeout(() => {
+                    gameState.currentNight++;
+                    if (gameState.currentNight > 99) {
+                        showVictory();
+                    } else {
+                        generateProblem();
+                    }
+                }, 2000);
+            } else {
+                // Falsche Antwort
+                feedback.classList.add('wrong');
+                gameState.streak = 0;
+                document.getElementById('streak').textContent = 0;
+
+                const encouragements = [
+                    `Fast! Die richtige Antwort ist ${correctAnswer}. Versuch's nochmal!`,
+                    `Nicht ganz, aber du schaffst das! Es war ${correctAnswer}.`,
+                    `Übung macht den Meister! Die Lösung war ${correctAnswer}.`,
+                    `Kopf hoch! ${correctAnswer} war richtig. Weiter geht's!`
+                ];
+
+                feedbackText.textContent = encouragements[Math.floor(Math.random() * encouragements.length)];
+                rewardText.textContent = 'Keine Sorge, du bekommst eine neue Chance! 💪';
+
+                // Neue Aufgabe nach kurzer Pause (gleiche Nacht)
+                setTimeout(() => {
+                    generateProblem();
+                }, 2500);
+            }
+        }
+
+        function showHint() {
+            const hintBox = document.getElementById('hintBox');
+            document.getElementById('hintText').textContent = gameState.currentProblem.hint;
+            hintBox.classList.remove('hidden');
+            gameState.hintsUsed++;
+        }
+
+        function updateProgress() {
+            const progress = Math.round((gameState.currentNight / 99) * 100);
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressPercent').textContent = progress;
+        }
+
+        function showVictory() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('header').classList.add('hidden');
+            document.getElementById('helpBtn').classList.add('hidden');
+            document.getElementById('rewardScreen').classList.remove('hidden');
+
+            document.getElementById('bigRewardEmoji').textContent = gameState.targetPetEmoji;
+            document.getElementById('rewardMessage').innerHTML = `
+                <p>Herzlichen Glückwunsch, ${gameState.playerName}!</p>
+                <p>Du hast alle 99 Nächte überlebt und dein ${gameState.targetPetName} ${gameState.targetPetEmoji} verdient!</p>
+                <p>Gesammelte Bloxy Coins: ${gameState.coins} 💰</p>
+            `;
+        }
+
+        function resetGame() {
+            gameState = {
+                playerName: '',
+                targetPet: 'unicorn',
+                targetPetName: 'Einhorn',
+                targetPetEmoji: '🦄',
+                currentNight: 1,
+                coins: 0,
+                streak: 0,
+                currentProblem: null,
+                hintsUsed: 0
+            };
+
+            document.querySelectorAll('.pet-option').forEach(o => o.classList.remove('selected'));
+            document.getElementById('rewardScreen').classList.add('hidden');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('playerName').value = '';
+            document.getElementById('coins').textContent = '0';
+            document.getElementById('streak').textContent = '0';
+        }
+
+        // Speichern im Local Storage
+        function saveGame() {
+            localStorage.setItem('brookhavenMathGame', JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('brookhavenMathGame');
+            if (saved) {
+                gameState = JSON.parse(saved);
+                // Spiel fortsetzen...
+            }
+        }
+    </script>
+</body>
+</html>
