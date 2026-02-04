@@ -637,6 +637,7 @@
 
                 <div>
                     <button class="btn" onclick="checkAnswer()">Prüfen!</button>
+                    <button class="btn btn-danger" onclick="endGame()" style="padding: 10px 20px; font-size: 0.9em;">Spiel beenden</button>
                 </div>
 
                 <div class="feedback hidden" id="feedback">
@@ -1459,16 +1460,24 @@
             document.getElementById('progressPercent').textContent = progress;
         }
 
-        function showVictory() {
+        function endGame() {
+            if (!confirm('Möchtest du das Spiel wirklich beenden?')) return;
+            showVictory(true);
+        }
+
+        function showVictory(earlyEnd = false) {
             document.getElementById('gameScreen').classList.add('hidden');
             document.getElementById('header').classList.add('hidden');
             document.getElementById('helpBtn').classList.add('hidden');
             document.getElementById('highscoreBtn').classList.add('hidden');
             document.getElementById('rewardScreen').classList.remove('hidden');
 
-            // Victory fanfare
-            AudioSystem.playVictoryFanfare();
-            ConfettiSystem.launch();
+            DangerSystem.deactivate();
+
+            if (!earlyEnd) {
+                AudioSystem.playVictoryFanfare();
+                ConfettiSystem.launch();
+            }
 
             // Calculate and save high score
             const score = HighScoreSystem.calculateScore(gameState);
@@ -1488,15 +1497,30 @@
                 placementBadge.classList.remove('hidden');
             }
 
-            document.getElementById('bigRewardEmoji').textContent = gameState.targetPetEmoji;
-            document.getElementById('rewardMessage').innerHTML = `
-                <p>Herzlichen Glückwunsch, ${gameState.playerName}!</p>
-                <p>Du hast alle 99 Nächte überlebt und dein ${gameState.targetPetName} ${gameState.targetPetEmoji} verdient!</p>
-                <p>Gesammelte Bloxy Coins: ${gameState.coins} 💰</p>
-                <p>Endpunktzahl: ${score} Punkte</p>
-                <p>Höchste Serie: ${gameState.maxStreak} 🔥</p>
-                ${gameState.dangerSurvived > 0 ? `<p>Überstandene Bedrohungen: ${gameState.dangerSurvived} 👹</p>` : ''}
-            `;
+            const reachedNight = gameState.currentNight > 99 ? 99 : gameState.currentNight;
+            const completed = !earlyEnd;
+
+            document.getElementById('bigRewardEmoji').textContent = completed ? gameState.targetPetEmoji : '📊';
+            document.getElementById('rewardMessage').innerHTML = completed
+                ? `
+                    <p>Herzlichen Glückwunsch, ${gameState.playerName}!</p>
+                    <p>Du hast alle 99 Nächte überlebt und dein ${gameState.targetPetName} ${gameState.targetPetEmoji} verdient!</p>
+                    <p>Gesammelte Bloxy Coins: ${gameState.coins} 💰</p>
+                    <p>Endpunktzahl: ${score} Punkte</p>
+                    <p>Höchste Serie: ${gameState.maxStreak} 🔥</p>
+                    ${gameState.dangerSurvived > 0 ? `<p>Überstandene Bedrohungen: ${gameState.dangerSurvived} 👹</p>` : ''}
+                `
+                : `
+                    <p>Spielzusammenfassung für ${gameState.playerName}</p>
+                    <p>Erreichte Nacht: ${reachedNight} von 99</p>
+                    <p>Gesammelte Bloxy Coins: ${gameState.coins} 💰</p>
+                    <p>Endpunktzahl: ${score} Punkte</p>
+                    <p>Höchste Serie: ${gameState.maxStreak} 🔥</p>
+                    ${gameState.dangerSurvived > 0 ? `<p>Überstandene Bedrohungen: ${gameState.dangerSurvived} 👹</p>` : ''}
+                `;
+
+            // Update title for early end
+            document.querySelector('#rewardScreen .game-title').textContent = completed ? 'Geschafft!' : 'Spielende';
         }
 
         function showHighScores() {
