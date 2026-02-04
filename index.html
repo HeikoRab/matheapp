@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brookhaven Mathe Abenteuer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -141,6 +142,17 @@
             transform: scale(0.98);
         }
 
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            margin: 10px;
+            padding: 10px 25px;
+            font-size: 1em;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e17055, #d63031);
+        }
+
         /* Spiel-Screen */
         .game-screen {
             text-align: center;
@@ -162,6 +174,7 @@
             border-radius: 15px;
             margin: 20px 0;
             line-height: 1.6;
+            transition: all 0.5s ease;
         }
 
         .character-speaking {
@@ -191,6 +204,7 @@
             font-size: 2em;
             font-weight: bold;
             border: 3px solid #ffd700;
+            transition: all 0.5s ease;
         }
 
         .answer-input {
@@ -355,9 +369,176 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
+
+        /* Konfetti Canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Neue Belohnungs-Animationen */
+        @keyframes coinBurst {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-80px) scale(1.3); opacity: 1; }
+            100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
+        }
+
+        @keyframes starShine {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            25% { transform: scale(1.3) rotate(10deg); opacity: 0.8; }
+            50% { transform: scale(1.5) rotate(-5deg); opacity: 1; }
+            75% { transform: scale(1.2) rotate(5deg); opacity: 0.9; }
+        }
+
+        @keyframes successGlow {
+            0% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8), 0 0 60px rgba(0, 255, 0, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+
+        .reward-burst {
+            position: fixed;
+            font-size: 2em;
+            pointer-events: none;
+            z-index: 1001;
+            animation: floatUp 1.5s ease-out forwards;
+        }
+
+        .success-glow {
+            animation: successGlow 0.8s ease-in-out;
+        }
+
+        .star-shine {
+            animation: starShine 1s ease-in-out;
+        }
+
+        /* Bedrohliche Situationen */
+        @keyframes dangerPulse {
+            0%, 100% { background-color: rgba(139, 0, 0, 0.1); }
+            50% { background-color: rgba(139, 0, 0, 0.3); }
+        }
+
+        @keyframes glowingEyes {
+            0%, 100% { text-shadow: 0 0 10px red, 0 0 20px red; }
+            50% { text-shadow: 0 0 20px red, 0 0 40px red, 0 0 60px darkred; }
+        }
+
+        .danger-mode {
+            animation: dangerPulse 1s infinite;
+        }
+
+        .danger-mode .math-problem {
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .danger-mode .story-box {
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .danger-avatar {
+            animation: glowingEyes 1.5s infinite;
+        }
+
+        /* High Score Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 3px solid #ffd700;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .highscore-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .highscore-table th, .highscore-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .highscore-table th {
+            color: #ffd700;
+        }
+
+        .medal {
+            font-size: 1.5em;
+        }
+
+        /* High Score Button */
+        .highscore-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #ffd700;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .victory-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .placement-badge {
+            background: linear-gradient(45deg, #ffd700, #ff6b6b);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <canvas id="confettiCanvas"></canvas>
+
     <div class="container">
         <!-- Header mit Stats (versteckt am Anfang) -->
         <div class="header hidden" id="header">
@@ -435,7 +616,7 @@
                 </div>
                 <div class="progress-text">Fortschritt zum <span id="targetPetName">Einhorn</span>: <span id="progressPercent">1</span>%</div>
 
-                <div class="story-box">
+                <div class="story-box" id="storyBox">
                     <div class="character-speaking">
                         <div class="character-avatar" id="npcAvatar">👨‍🔬</div>
                         <div class="speech-bubble" id="storyText">
@@ -468,16 +649,474 @@
             <div class="reward-screen hidden" id="rewardScreen">
                 <div class="big-reward" id="bigRewardEmoji">🦄</div>
                 <h1 class="game-title">Geschafft!</h1>
+                <div class="placement-badge hidden" id="placementBadge"></div>
                 <p id="rewardMessage">Du hast dein Einhorn verdient!</p>
-                <button class="btn" onclick="resetGame()">Nochmal spielen</button>
+                <div class="victory-buttons">
+                    <button class="btn" onclick="resetGame()">Nochmal spielen</button>
+                    <button class="btn btn-secondary" onclick="exportToPDF()">📄 PDF Export</button>
+                    <button class="btn btn-secondary" onclick="showHighScores()">🏆 High Scores</button>
+                </div>
             </div>
         </div>
     </div>
 
     <button class="help-btn hidden" id="helpBtn" onclick="showHint()">💡</button>
+    <button class="highscore-btn hidden" id="highscoreBtn" onclick="showHighScores()">🏆</button>
+
+    <!-- High Score Modal -->
+    <div class="modal hidden" id="highscoreModal" onclick="closeModalOutside(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="modal-title">🏆 High Scores</h2>
+            <table class="highscore-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Nacht</th>
+                    </tr>
+                </thead>
+                <tbody id="highscoreTableBody">
+                </tbody>
+            </table>
+            <button class="btn" onclick="closeHighScores()">Schließen</button>
+        </div>
+    </div>
 
     <script>
-        // Spielzustand
+        // ==================== AUDIO SYSTEM ====================
+        const AudioSystem = {
+            context: null,
+
+            init() {
+                this.context = new (window.AudioContext || window.webkitAudioContext)();
+            },
+
+            ensureContext() {
+                if (!this.context) this.init();
+                if (this.context.state === 'suspended') {
+                    this.context.resume();
+                }
+            },
+
+            playTone(frequency, duration, type = 'sine', volume = 0.3) {
+                this.ensureContext();
+                const oscillator = this.context.createOscillator();
+                const gainNode = this.context.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.context.destination);
+
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(frequency, this.context.currentTime);
+
+                gainNode.gain.setValueAtTime(volume, this.context.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration);
+
+                oscillator.start(this.context.currentTime);
+                oscillator.stop(this.context.currentTime + duration);
+            },
+
+            playCorrectSound() {
+                this.ensureContext();
+                // Fröhliches aufsteigendes "Ding" (C5 -> E5 -> G5)
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                notes.forEach((freq, i) => {
+                    setTimeout(() => this.playTone(freq, 0.2, 'sine', 0.3), i * 100);
+                });
+            },
+
+            playWrongSound() {
+                this.ensureContext();
+                // Sanfter tiefer Ton
+                this.playTone(220, 0.4, 'sine', 0.2);
+                setTimeout(() => this.playTone(196, 0.3, 'sine', 0.15), 150);
+            },
+
+            playDangerSound() {
+                this.ensureContext();
+                // Bedrohlicher Ton
+                const oscillator = this.context.createOscillator();
+                const gainNode = this.context.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.context.destination);
+
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(100, this.context.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, this.context.currentTime + 0.5);
+
+                gainNode.gain.setValueAtTime(0.2, this.context.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 0.5);
+
+                oscillator.start(this.context.currentTime);
+                oscillator.stop(this.context.currentTime + 0.5);
+
+                // Zweiter gruseliger Ton
+                setTimeout(() => {
+                    this.playTone(80, 0.3, 'triangle', 0.15);
+                }, 300);
+            },
+
+            playVictoryFanfare() {
+                this.ensureContext();
+                // Sieges-Melodie
+                const melody = [
+                    { freq: 523.25, delay: 0 },    // C5
+                    { freq: 587.33, delay: 150 },  // D5
+                    { freq: 659.25, delay: 300 },  // E5
+                    { freq: 783.99, delay: 450 },  // G5
+                    { freq: 1046.50, delay: 700 }, // C6
+                    { freq: 783.99, delay: 900 },  // G5
+                    { freq: 1046.50, delay: 1100 } // C6 (final)
+                ];
+
+                melody.forEach(note => {
+                    setTimeout(() => this.playTone(note.freq, 0.3, 'sine', 0.25), note.delay);
+                });
+            },
+
+            playStreakSound() {
+                this.ensureContext();
+                // Schnelles aufsteigendes Arpeggio
+                const notes = [392, 494, 587, 784]; // G4, B4, D5, G5
+                notes.forEach((freq, i) => {
+                    setTimeout(() => this.playTone(freq, 0.15, 'triangle', 0.2), i * 50);
+                });
+            }
+        };
+
+        // ==================== CONFETTI SYSTEM ====================
+        const ConfettiSystem = {
+            canvas: null,
+            ctx: null,
+            particles: [],
+            animationId: null,
+
+            init() {
+                this.canvas = document.getElementById('confettiCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            },
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            },
+
+            createParticles(count = 100) {
+                this.particles = [];
+                const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#00d2d3', '#54a0ff', '#ffd700', '#00b894'];
+
+                for (let i = 0; i < count; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: -20 - Math.random() * 100,
+                        size: Math.random() * 10 + 5,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        speedX: (Math.random() - 0.5) * 6,
+                        speedY: Math.random() * 3 + 2,
+                        rotation: Math.random() * 360,
+                        rotationSpeed: (Math.random() - 0.5) * 10,
+                        shape: Math.random() > 0.5 ? 'rect' : 'circle'
+                    });
+                }
+            },
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                let activeParticles = 0;
+
+                this.particles.forEach(p => {
+                    if (p.y < this.canvas.height + 50) {
+                        activeParticles++;
+
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+                        p.speedY += 0.1; // Gravity
+                        p.rotation += p.rotationSpeed;
+
+                        this.ctx.save();
+                        this.ctx.translate(p.x, p.y);
+                        this.ctx.rotate(p.rotation * Math.PI / 180);
+                        this.ctx.fillStyle = p.color;
+
+                        if (p.shape === 'rect') {
+                            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size / 2);
+                        } else {
+                            this.ctx.beginPath();
+                            this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+
+                        this.ctx.restore();
+                    }
+                });
+
+                if (activeParticles > 0) {
+                    this.animationId = requestAnimationFrame(() => this.animate());
+                } else {
+                    this.stop();
+                }
+            },
+
+            launch() {
+                this.stop();
+                this.createParticles(100);
+                this.animate();
+            },
+
+            stop() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+                if (this.ctx) {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+        };
+
+        // ==================== REWARD ANIMATION SYSTEM ====================
+        const RewardSystem = {
+            showRewardBurst(emoji, x, y) {
+                const element = document.createElement('div');
+                element.className = 'reward-burst';
+                element.textContent = emoji;
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                document.body.appendChild(element);
+
+                setTimeout(() => element.remove(), 1500);
+            },
+
+            celebrateCorrectAnswer() {
+                const emojis = ['⭐', '💰', '✨', '🌟', '💎', '🎉'];
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+
+                for (let i = 0; i < 6; i++) {
+                    setTimeout(() => {
+                        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        const x = centerX + (Math.random() - 0.5) * 200;
+                        const y = centerY + (Math.random() - 0.5) * 100;
+                        this.showRewardBurst(emoji, x, y);
+                    }, i * 100);
+                }
+
+                // Add glow to problem box
+                const problemBox = document.getElementById('mathProblem');
+                problemBox.classList.add('success-glow');
+                setTimeout(() => problemBox.classList.remove('success-glow'), 800);
+            },
+
+            celebrateStreak(streakCount) {
+                if (streakCount >= 3) {
+                    const emojis = ['🔥', '⚡', '💪', '🚀'];
+                    for (let i = 0; i < streakCount; i++) {
+                        setTimeout(() => {
+                            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                            const x = Math.random() * window.innerWidth * 0.8 + window.innerWidth * 0.1;
+                            const y = window.innerHeight * 0.3;
+                            this.showRewardBurst(emoji, x, y);
+                        }, i * 150);
+                    }
+                    AudioSystem.playStreakSound();
+                }
+            }
+        };
+
+        // ==================== HIGH SCORE SYSTEM ====================
+        const HighScoreSystem = {
+            maxScores: 10,
+
+            calculateScore(gameState) {
+                const nightScore = gameState.currentNight * 100;
+                const coinScore = gameState.coins;
+                const streakBonus = gameState.maxStreak * 50;
+                const hintPenalty = gameState.hintsUsed * 10;
+
+                return nightScore + coinScore + streakBonus - hintPenalty;
+            },
+
+            getHighScores() {
+                const saved = localStorage.getItem('brookhavenHighScores');
+                return saved ? JSON.parse(saved) : [];
+            },
+
+            saveHighScore(name, score, night, coins) {
+                const scores = this.getHighScores();
+                const newEntry = {
+                    name,
+                    score,
+                    night,
+                    coins,
+                    date: new Date().toISOString()
+                };
+
+                scores.push(newEntry);
+                scores.sort((a, b) => b.score - a.score);
+                scores.splice(this.maxScores);
+
+                localStorage.setItem('brookhavenHighScores', JSON.stringify(scores));
+
+                // Return placement (1-indexed)
+                return scores.findIndex(s => s.date === newEntry.date) + 1;
+            },
+
+            getPlacement(score) {
+                const scores = this.getHighScores();
+                let placement = scores.length + 1;
+                for (let i = 0; i < scores.length; i++) {
+                    if (score > scores[i].score) {
+                        placement = i + 1;
+                        break;
+                    }
+                }
+                return placement <= this.maxScores ? placement : null;
+            }
+        };
+
+        // ==================== DANGER SYSTEM ====================
+        const DangerSystem = {
+            characters: [
+                { name: 'Der Kultist', emoji: '🧙‍♂️', style: 'bedrohlich' },
+                { name: 'Dunkler Kultist', emoji: '👤', style: 'mysteriös' },
+                { name: 'Der Große Elch', emoji: '🫎', style: 'majestätisch-bedrohlich' },
+                { name: 'Schatten-Kultist', emoji: '👥', style: 'unheimlich' }
+            ],
+
+            stories: [
+                "Die Schatten bewegen sich... Löse diese Aufgabe, bevor ES dich findet!",
+                "Ich spüre deine Angst... Nur die richtige Antwort kann dich noch retten.",
+                "Du hast mein Reich betreten. Beweise deine Würdigkeit mit Mathematik!",
+                "Die Dunkelheit ruft... Nur Zahlen können sie aufhalten!",
+                "Hörst du das Flüstern? Rechne schnell, bevor die Stimmen lauter werden...",
+                "Meine Brüder umzingeln dich bereits. Deine einzige Chance ist diese Aufgabe!",
+                "Der Große Elch beobachtet dich aus den Schatten. Enttäusche ihn nicht..."
+            ],
+
+            shouldTrigger(night) {
+                // Trigger alle 7-10 Nächte + 15% Zufallschance
+                const isScheduled = night === 7 || night === 14 || night === 21 ||
+                                   night === 30 || night === 40 || night === 50 ||
+                                   night === 60 || night === 70 || night === 80 || night === 90;
+                const randomTrigger = Math.random() < 0.15;
+
+                return isScheduled || (night > 10 && randomTrigger);
+            },
+
+            getRandomCharacter() {
+                return this.characters[Math.floor(Math.random() * this.characters.length)];
+            },
+
+            getRandomStory() {
+                return this.stories[Math.floor(Math.random() * this.stories.length)];
+            },
+
+            activate() {
+                document.getElementById('gameScreen').classList.add('danger-mode');
+                document.getElementById('npcAvatar').classList.add('danger-avatar');
+                AudioSystem.playDangerSound();
+            },
+
+            deactivate() {
+                document.getElementById('gameScreen').classList.remove('danger-mode');
+                document.getElementById('npcAvatar').classList.remove('danger-avatar');
+            }
+        };
+
+        // ==================== PDF EXPORT ====================
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Titel
+            doc.setFontSize(24);
+            doc.setTextColor(106, 27, 154);
+            doc.text('Brookhaven Mathe Abenteuer', 105, 20, { align: 'center' });
+
+            // Spieler Info
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Spieler: ${gameState.playerName}`, 20, 40);
+            doc.text(`Datum: ${new Date().toLocaleDateString('de-DE')}`, 20, 50);
+
+            // Statistiken
+            doc.setFontSize(16);
+            doc.setTextColor(255, 107, 107);
+            doc.text('Ergebnisse', 20, 70);
+
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Erreichte Nacht: ${gameState.currentNight} von 99`, 20, 85);
+            doc.text(`Gesammelte Bloxy Coins: ${gameState.coins}`, 20, 95);
+            doc.text(`Höchste Serie: ${gameState.maxStreak}`, 20, 105);
+            doc.text(`Benutzte Tipps: ${gameState.hintsUsed}`, 20, 115);
+
+            const correctCount = gameState.sessionProblems.filter(p => p.correct).length;
+            const totalCount = gameState.sessionProblems.length;
+            const percentage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+            doc.text(`Richtige Antworten: ${correctCount} von ${totalCount} (${percentage}%)`, 20, 125);
+
+            // Score
+            const score = HighScoreSystem.calculateScore(gameState);
+            doc.setFontSize(14);
+            doc.setTextColor(255, 215, 0);
+            doc.text(`Endpunktzahl: ${score}`, 20, 140);
+
+            // Aufgaben-Tabelle
+            if (gameState.sessionProblems.length > 0) {
+                doc.setFontSize(16);
+                doc.setTextColor(106, 27, 154);
+                doc.text('Aufgaben-Übersicht', 20, 160);
+
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+
+                let y = 175;
+                doc.text('Nacht', 20, y);
+                doc.text('Aufgabe', 45, y);
+                doc.text('Deine Antwort', 110, y);
+                doc.text('Richtig', 160, y);
+
+                y += 5;
+                doc.line(20, y, 190, y);
+                y += 10;
+
+                const maxProblems = Math.min(gameState.sessionProblems.length, 20);
+                for (let i = 0; i < maxProblems; i++) {
+                    const p = gameState.sessionProblems[i];
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+
+                    doc.text(String(p.night), 20, y);
+                    doc.text(p.question.substring(0, 25), 45, y);
+                    doc.text(String(p.userAnswer), 110, y);
+                    doc.setTextColor(p.correct ? 0 : 255, p.correct ? 150 : 0, 0);
+                    doc.text(p.correct ? 'Ja' : 'Nein', 160, y);
+                    doc.setTextColor(0, 0, 0);
+                    y += 10;
+                }
+
+                if (gameState.sessionProblems.length > 20) {
+                    doc.text(`... und ${gameState.sessionProblems.length - 20} weitere Aufgaben`, 20, y + 10);
+                }
+            }
+
+            // Pet
+            doc.setFontSize(12);
+            const petY = Math.min(y + 30, 280);
+            doc.text(`Ziel-Pet: ${gameState.targetPetName}`, 20, petY);
+
+            doc.save(`Brookhaven_Mathe_${gameState.playerName}_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        // ==================== GAME STATE ====================
         let gameState = {
             playerName: '',
             targetPet: 'unicorn',
@@ -486,8 +1125,12 @@
             currentNight: 1,
             coins: 0,
             streak: 0,
+            maxStreak: 0,
             currentProblem: null,
-            hintsUsed: 0
+            hintsUsed: 0,
+            sessionProblems: [],
+            isDangerMode: false,
+            dangerSurvived: 0
         };
 
         // Roblox-Charaktere für die Geschichte
@@ -515,9 +1158,8 @@
             "Fast geschafft! Noch eine Aufgabe, dann bist du sicher für diese Nacht!"
         ];
 
-        // Aufgaben nach Schwierigkeitsgrad (inspiriert von den Arbeitsblättern)
+        // Aufgaben nach Schwierigkeitsgrad
         const problemGenerators = {
-            // Nacht 1-15: Sehr einfache Addition und Subtraktion
             easy: [
                 () => {
                     const a = Math.floor(Math.random() * 10) + 1;
@@ -535,7 +1177,6 @@
                     return { question: `? + ${b} = ${answer + b}`, answer: answer, hint: `Was plus ${b} ergibt ${answer + b}?` };
                 }
             ],
-            // Nacht 16-35: Zahlenfolgen und einfache Multiplikation
             medium: [
                 () => {
                     const start = Math.floor(Math.random() * 5) * 10 + 10;
@@ -560,7 +1201,6 @@
                     return { question: `${a} - ${b} = ?`, answer: a - b, hint: `Rechne erst ${a} - ${Math.floor(b/10)*10}, dann noch -${b % 10}` };
                 }
             ],
-            // Nacht 36-60: Division, Verdoppeln, Halbieren
             hard: [
                 () => {
                     const b = [2, 3, 4, 5][Math.floor(Math.random() * 4)];
@@ -577,7 +1217,6 @@
                     return { question: `Die Hälfte von ${num} = ?`, answer: num / 2, hint: `Teile ${num} in zwei gleiche Teile!` };
                 }
             ],
-            // Nacht 61-99: Division mit Rest, komplexere Aufgaben
             expert: [
                 () => {
                     const divisor = [3, 4, 5, 6, 7][Math.floor(Math.random() * 5)];
@@ -624,6 +1263,9 @@
             gameState.playerName = name;
             document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('petScreen').classList.remove('hidden');
+
+            // Initialize audio on user interaction
+            AudioSystem.init();
         }
 
         function startGame() {
@@ -635,7 +1277,11 @@
             document.getElementById('gameScreen').classList.remove('hidden');
             document.getElementById('header').classList.remove('hidden');
             document.getElementById('helpBtn').classList.remove('hidden');
+            document.getElementById('highscoreBtn').classList.remove('hidden');
             document.getElementById('targetPetName').textContent = gameState.targetPetName;
+
+            // Initialize systems
+            ConfettiSystem.init();
 
             generateProblem();
         }
@@ -658,12 +1304,27 @@
             document.getElementById('night').textContent = night;
             document.getElementById('mathProblem').textContent = gameState.currentProblem.question;
 
-            // Zufälliger Charakter und Geschichte
-            const character = characters[Math.floor(Math.random() * characters.length)];
-            const story = stories[Math.floor(Math.random() * stories.length)];
+            // Check for danger mode
+            if (DangerSystem.shouldTrigger(night)) {
+                gameState.isDangerMode = true;
+                DangerSystem.activate();
 
-            document.getElementById('npcAvatar').textContent = character.emoji;
-            document.getElementById('storyText').innerHTML = `<strong>${character.name}:</strong> ${story}`;
+                const dangerChar = DangerSystem.getRandomCharacter();
+                const dangerStory = DangerSystem.getRandomStory();
+
+                document.getElementById('npcAvatar').textContent = dangerChar.emoji;
+                document.getElementById('storyText').innerHTML = `<strong>${dangerChar.name}:</strong> ${dangerStory}`;
+            } else {
+                gameState.isDangerMode = false;
+                DangerSystem.deactivate();
+
+                // Zufälliger Charakter und Geschichte
+                const character = characters[Math.floor(Math.random() * characters.length)];
+                const story = stories[Math.floor(Math.random() * stories.length)];
+
+                document.getElementById('npcAvatar').textContent = character.emoji;
+                document.getElementById('storyText').innerHTML = `<strong>${character.name}:</strong> ${story}`;
+            }
 
             // Reset
             document.getElementById('answerInput').value = '';
@@ -692,16 +1353,43 @@
                 return;
             }
 
+            // Track the problem
+            gameState.sessionProblems.push({
+                night: gameState.currentNight,
+                question: gameState.currentProblem.question,
+                correctAnswer: correctAnswer,
+                userAnswer: userAnswer,
+                correct: userAnswer === correctAnswer
+            });
+
             feedback.classList.remove('hidden', 'correct', 'wrong');
 
             if (userAnswer === correctAnswer) {
                 // Richtige Antwort
                 feedback.classList.add('correct');
                 gameState.streak++;
+                if (gameState.streak > gameState.maxStreak) {
+                    gameState.maxStreak = gameState.streak;
+                }
+
                 const baseCoins = 10;
                 const streakBonus = gameState.streak > 1 ? gameState.streak * 2 : 0;
-                const coinsEarned = baseCoins + streakBonus;
+                const dangerBonus = gameState.isDangerMode ? 25 : 0;
+                const coinsEarned = baseCoins + streakBonus + dangerBonus;
                 gameState.coins += coinsEarned;
+
+                if (gameState.isDangerMode) {
+                    gameState.dangerSurvived++;
+                }
+
+                // Sound & Visual feedback
+                AudioSystem.playCorrectSound();
+                ConfettiSystem.launch();
+                RewardSystem.celebrateCorrectAnswer();
+
+                if (gameState.streak >= 3) {
+                    RewardSystem.celebrateStreak(gameState.streak);
+                }
 
                 const successMessages = [
                     `Super gemacht, ${gameState.playerName}! 🎉`,
@@ -712,8 +1400,12 @@
                     `Fantastisch! ${gameState.targetPetEmoji} ist stolz auf dich!`
                 ];
 
+                let rewardMessage = `+${coinsEarned} Bloxy Coins! 💰`;
+                if (gameState.streak > 1) rewardMessage += ` (${gameState.streak}er Serie!)`;
+                if (dangerBonus > 0) rewardMessage += ` (+${dangerBonus} Gefahren-Bonus!)`;
+
                 feedbackText.textContent = successMessages[Math.floor(Math.random() * successMessages.length)];
-                rewardText.textContent = `+${coinsEarned} Bloxy Coins! 💰` + (gameState.streak > 1 ? ` (${gameState.streak}er Serie!)` : '');
+                rewardText.textContent = rewardMessage;
 
                 document.getElementById('coins').textContent = gameState.coins;
                 document.getElementById('streak').textContent = gameState.streak;
@@ -733,6 +1425,8 @@
                 gameState.streak = 0;
                 document.getElementById('streak').textContent = 0;
 
+                AudioSystem.playWrongSound();
+
                 const encouragements = [
                     `Fast! Die richtige Antwort ist ${correctAnswer}. Versuch's nochmal!`,
                     `Nicht ganz, aber du schaffst das! Es war ${correctAnswer}.`,
@@ -748,6 +1442,8 @@
                     generateProblem();
                 }, 2500);
             }
+
+            saveGame();
         }
 
         function showHint() {
@@ -767,14 +1463,76 @@
             document.getElementById('gameScreen').classList.add('hidden');
             document.getElementById('header').classList.add('hidden');
             document.getElementById('helpBtn').classList.add('hidden');
+            document.getElementById('highscoreBtn').classList.add('hidden');
             document.getElementById('rewardScreen').classList.remove('hidden');
+
+            // Victory fanfare
+            AudioSystem.playVictoryFanfare();
+            ConfettiSystem.launch();
+
+            // Calculate and save high score
+            const score = HighScoreSystem.calculateScore(gameState);
+            const placement = HighScoreSystem.saveHighScore(
+                gameState.playerName,
+                score,
+                gameState.currentNight,
+                gameState.coins
+            );
+
+            // Show placement badge
+            const placementBadge = document.getElementById('placementBadge');
+            if (placement && placement <= 10) {
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = placement <= 3 ? medals[placement - 1] : '🏅';
+                placementBadge.textContent = `${medal} Platz ${placement} in den High Scores!`;
+                placementBadge.classList.remove('hidden');
+            }
 
             document.getElementById('bigRewardEmoji').textContent = gameState.targetPetEmoji;
             document.getElementById('rewardMessage').innerHTML = `
                 <p>Herzlichen Glückwunsch, ${gameState.playerName}!</p>
                 <p>Du hast alle 99 Nächte überlebt und dein ${gameState.targetPetName} ${gameState.targetPetEmoji} verdient!</p>
                 <p>Gesammelte Bloxy Coins: ${gameState.coins} 💰</p>
+                <p>Endpunktzahl: ${score} Punkte</p>
+                <p>Höchste Serie: ${gameState.maxStreak} 🔥</p>
+                ${gameState.dangerSurvived > 0 ? `<p>Überstandene Bedrohungen: ${gameState.dangerSurvived} 👹</p>` : ''}
             `;
+        }
+
+        function showHighScores() {
+            const scores = HighScoreSystem.getHighScores();
+            const tbody = document.getElementById('highscoreTableBody');
+            tbody.innerHTML = '';
+
+            if (scores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Noch keine High Scores!</td></tr>';
+            } else {
+                scores.forEach((score, index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = index < 3 ? `<span class="medal">${medals[index]}</span>` : (index + 1);
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${medal}</td>
+                        <td>${score.name}</td>
+                        <td>${score.score}</td>
+                        <td>${score.night}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            document.getElementById('highscoreModal').classList.remove('hidden');
+        }
+
+        function closeHighScores() {
+            document.getElementById('highscoreModal').classList.add('hidden');
+        }
+
+        function closeModalOutside(event) {
+            if (event.target.id === 'highscoreModal') {
+                closeHighScores();
+            }
         }
 
         function resetGame() {
@@ -786,16 +1544,24 @@
                 currentNight: 1,
                 coins: 0,
                 streak: 0,
+                maxStreak: 0,
                 currentProblem: null,
-                hintsUsed: 0
+                hintsUsed: 0,
+                sessionProblems: [],
+                isDangerMode: false,
+                dangerSurvived: 0
             };
 
             document.querySelectorAll('.pet-option').forEach(o => o.classList.remove('selected'));
             document.getElementById('rewardScreen').classList.add('hidden');
             document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('placementBadge').classList.add('hidden');
             document.getElementById('playerName').value = '';
             document.getElementById('coins').textContent = '0';
             document.getElementById('streak').textContent = '0';
+
+            DangerSystem.deactivate();
+            ConfettiSystem.stop();
         }
 
         // Speichern im Local Storage
@@ -807,7 +1573,6 @@
             const saved = localStorage.getItem('brookhavenMathGame');
             if (saved) {
                 gameState = JSON.parse(saved);
-                // Spiel fortsetzen...
             }
         }
     </script>
